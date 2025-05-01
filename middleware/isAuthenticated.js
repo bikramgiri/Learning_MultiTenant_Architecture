@@ -31,7 +31,7 @@ exports.isAuthenticated = async (req, res, next) => {
     }else{
         req.user = userExist// Set the user ID in the request object for further use
         req.userId = userExist[0].id // Set the user ID in the request object for further use
-        req.oraganizationNumber = userExist[0].currentOrganization // Set the organization number in the request object for further use
+        req.organizationNumber = userExist[0].currentOrganization // Set the organization number in the request object for further use
   
         next();
     }

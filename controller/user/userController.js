@@ -1,7 +1,10 @@
-const { users } = require('../../model/index')
+const { users, sequelize } = require('../../model/index')
 const bcrypt = require('bcryptjs') 
 const jwt = require('jsonwebtoken') 
 
+const db = require('../../model/index'); // Import the database connection and models
+const {QueryTypes} = require('sequelize') // Import QueryTypes from Sequelize
+// const sequelize = db.sequelize // Get the sequelize instance from the db object
 
 exports.registerUser = async(req,res)=>{
   const {username,email,password} = req.body
@@ -65,6 +68,18 @@ exports.loginUser = async(req,res)=>{
       // secure: process.env.NODE_ENV === 'production', // Set the secure flag for production environment
       maxAge: 5*24 * 60 * 60 * 1000 // Set the cookie expiration time to 5 days
     })
+
+
+    // **Users History Table
+    sequelize.query(`CREATE TABLE IF NOT EXISTS userHistory_${userExists[0].id} (
+      id INT AUTO_INCREMENT PRIMARY KEY, 
+      organizationNumber INT NULL, 
+      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`, { 
+      type: QueryTypes.CREATE // Create a table for user history if it doesn't exist
+    })
+
+
     return res.send("Login successful") 
   }else{
     return res.send("Invalid password") // If the password is invalid, return an error response

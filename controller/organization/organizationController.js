@@ -26,9 +26,16 @@ exports.createOrganization = async (req, res) => {
                 type: QueryTypes.CREATE 
             })
 
+            // ** Insert into userHistory table
+            await sequelize.query(`INSERT INTO userHistory_${userId} (organizationNumber) VALUES (?)`, {
+                replacements: [organizationNumber], // Use the organization number generated above
+                type: QueryTypes.INSERT // Specify the query type as INSERT
+            }).then(() => { // Handle the successful insertion of the organization number into user history
+                console.log("User history updated successfully"); // Log a success message for debugging
+            })
 
               // **Create the payment in the database   
-        await sequelize.query(`CREATE TABLE IF NOT EXISTS payment_${organizationNumber} (
+            await sequelize.query(`CREATE TABLE IF NOT EXISTS payment_${organizationNumber} (
             id INT AUTO_INCREMENT PRIMARY KEY, 
             partyName VARCHAR(255), 
             amount DECIMAL(10, 2), 
@@ -39,7 +46,7 @@ exports.createOrganization = async (req, res) => {
         })
 
 
-            const userData = await db.users.findAll({ // Fetch the user data from the database
+        const userData = await db.users.findAll({ // Fetch the user data from the database
                 where: {
                     id: userId // Use the user ID from the request object
                 }
@@ -83,3 +90,59 @@ exports.createPayment = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' }); // Respond with a 500 status code and an error message
     }
 }
+
+
+//**Delete User
+exports.deleteUser = async (req, res) => {
+    try {
+        const userId = req.userId; // Get the user ID from the request object (assuming user is authenticated and ID is available)
+        // Grab all associated organization numbers for the user
+        const organizationNumbers = await sequelize.query(`SELECT organizationNumber FROM userHistory_${userId}`,{
+            type: QueryTypes.SELECT // Specify the query type as SELECT
+        })
+
+        await sequelize.query(`DELETE FROM users WHERE id = ?`, {
+            replacements: [userId], // Use the user ID from the request object
+            type: QueryTypes.DELETE // Specify the query type as DELETE
+        })
+        // res.status(200).json({ message: `User deleted successfully ${userId}` }); // Respond with a success message
+
+
+        // use loop to delete user and organization numbers from the database
+        for(var i = 0; i < organizationNumbers.length; i++){
+            await sequelize.query(`DROP TABLE organization_${organizationNumbers[i].organizationNumber}`, {
+                type: QueryTypes.DELETE // Specify the query type as DELETE
+            })
+            await sequelize.query(`DROP TABLE payment_${organizationNumbers[i].organizationNumber}`, {
+                type: QueryTypes.DELETE // Specify the query type as DELETE
+            })
+        }
+        res.status(200).json(
+            { 
+                message: `User${userId} and all associated organizations and payments deleted successfully` 
+            }
+        ); 
+        
+    } catch (error) { // Handle any errors that occur during the process
+        console.error('Error deleting user:', error); // Log the error for debugging
+        res.status(500).json({ message: 'Internal server error' }); // Respond with a 500 status code and an error message
+    }
+}
+
+
+exports.getOrganization = async (req, res) => {
+    const currentOrganization = req.organizationNumber; // Get the organization number from the request object
+    // const data = await sequelize.query(`SELECT * FROM organization_${currentOrganization} JOIN users ON organization_${currentOrganization}.userId = users.id`,{
+    // or
+    const data = await sequelize.query(`SELECT users.username,org. * FROM organization_${currentOrganization} org JOIN users users ON org.userId = users.id`,{
+        type: QueryTypes.SELECT // Specify the query type as SELECT
+    } )
+    res.status(200).json(
+        {
+            data
+        }
+    ) 
+}
+
+
+
