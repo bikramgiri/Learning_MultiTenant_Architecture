@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Home</title>
+      <link rel="stylesheet" href="home.css">
+</head>
+<body>
+
+      <div class="form-container">
+            <h2>Register</h2>
+            <form id="form">
+              <label for="name">Full Name</label>
+              <input type="text" id="name" name="name" required />
+        
+              <label for="email">Email Address</label>
+              <input type="email" id="email" name="email" required />
+        
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" required />
+        
+              <button type="submit">Register</button>
+            </form>
+          </div>
+
+      <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+
+      <script>
+            const socket = io();
+            const form = document.getElementById('form')
+            const name = document.getElementById('name')
+            const email = document.getElementById('email')
+            const password = document.getElementById('password')
+
+            form.addEventListener('submit', (e) => {
+                  e.preventDefault()
+                  // console.log(name.value, email.value, password.value)
+                  socket.emit("register",{username:name.value,email:email.value,password:password.value});
+                  socket.on("response", (data) => {
+                        console.log(data);
+                  });
+            });
+
+            // socket.emit('request', 'I am the client!');
+            // socket.on('response', (data) => {
+            //       console.log(data);
+            // });
+      </script>
+</body>
+</html>
